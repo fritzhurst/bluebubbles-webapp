@@ -1,0 +1,10 @@
+{
+  "name": "BlueBubbles Web",
+  "short_name": "BlueBubbles",
+  "description": "Local-first web client for a BlueBubbles Server",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#0a84ff",
+  "icons": []
+}

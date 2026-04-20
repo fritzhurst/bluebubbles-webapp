@@ -108,10 +108,14 @@ export const SETTING_KEYS = {
   LAST_FULL_SYNC: 'sync.lastFullSync',
   LAST_INCREMENTAL_SYNC: 'sync.lastIncrementalSync',
   SEND_METHOD: 'pref.sendMethod',
+  THEME: 'pref.theme',
 } as const;
 
 export type SendMethod = 'apple-script' | 'private-api';
 export const DEFAULT_SEND_METHOD: SendMethod = 'private-api';
+
+export type Theme = 'light' | 'dark';
+export const DEFAULT_THEME: Theme = 'dark';
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
 

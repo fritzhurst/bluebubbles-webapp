@@ -24,3 +24,142 @@ body,
 ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
+:root.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+:root.light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* -----------------------------------------------------------------------
+ * Light-mode overrides.
+ *
+ * The app was written dark-first with Tailwind slate/white utility classes.
+ * Rather than rewrite every component to use `dark:` variants, we re-color
+ * the utility classes themselves when `<html>` has the `light` class.
+ *
+ * Rule of thumb for the palette:
+ *   dark bg-slate-950  →  light bg-slate-50
+ *   dark bg-slate-900  →  light white
+ *   dark bg-slate-800  →  light slate-200
+ *   dark text-slate-100→  light slate-900
+ *   dark text-slate-400→  light slate-500
+ *   dark border/ring white/alpha → light black/alpha
+ * ---------------------------------------------------------------------- */
+
+:root.light body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Backgrounds ---------------------------------------------------------- */
+:root.light .bg-slate-950 {
+  background-color: #f8fafc;
+}
+:root.light .bg-slate-900 {
+  background-color: #ffffff;
+}
+:root.light .bg-slate-900\/60 {
+  background-color: rgb(241 245 249 / 0.95);
+}
+:root.light .bg-slate-900\/70 {
+  background-color: rgb(255 255 255 / 0.95);
+}
+:root.light .bg-slate-800 {
+  background-color: #e2e8f0;
+}
+:root.light .bg-slate-800\/50 {
+  background-color: rgb(226 232 240 / 0.6);
+}
+:root.light .bg-slate-700 {
+  background-color: #cbd5e1;
+}
+
+/* Hover backgrounds that use white/alpha become black/alpha in light mode */
+:root.light .hover\:bg-white\/5:hover {
+  background-color: rgb(0 0 0 / 0.05);
+}
+:root.light .hover\:bg-white\/10:hover {
+  background-color: rgb(0 0 0 / 0.08);
+}
+:root.light .focus\:bg-white\/5:focus {
+  background-color: rgb(0 0 0 / 0.05);
+}
+:root.light .bg-white\/5 {
+  background-color: rgb(0 0 0 / 0.04);
+}
+
+/* Text ---------------------------------------------------------------- */
+:root.light .text-slate-100 {
+  color: #0f172a;
+}
+:root.light .text-slate-200 {
+  color: #1e293b;
+}
+:root.light .text-slate-300 {
+  color: #334155;
+}
+:root.light .text-slate-400 {
+  color: #475569;
+}
+:root.light .text-slate-500 {
+  color: #64748b;
+}
+:root.light .text-slate-600 {
+  color: #94a3b8;
+}
+:root.light .hover\:text-slate-200:hover {
+  color: #1e293b;
+}
+:root.light .hover\:text-slate-100:hover {
+  color: #0f172a;
+}
+:root.light .hover\:text-white:hover {
+  color: #0f172a;
+}
+
+/* Borders & rings ----------------------------------------------------- */
+:root.light .border-white\/10 {
+  border-color: rgb(0 0 0 / 0.1);
+}
+:root.light .border-white\/5 {
+  border-color: rgb(0 0 0 / 0.06);
+}
+:root.light .ring-white\/10 {
+  --tw-ring-color: rgb(0 0 0 / 0.1);
+}
+:root.light .ring-white\/5 {
+  --tw-ring-color: rgb(0 0 0 / 0.06);
+}
+:root.light .focus\:ring-white\/50:focus {
+  --tw-ring-color: rgb(0 0 0 / 0.2);
+}
+:root.light .divide-white\/5 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgb(0 0 0 / 0.06);
+}
+:root.light .ring-black\/20 {
+  --tw-ring-color: rgb(0 0 0 / 0.15);
+}
+
+/* Selected chat highlight */
+:root.light .bg-imessage-blue\/20 {
+  background-color: rgb(10 132 255 / 0.14);
+}
+
+/* Incoming-message bubble: the custom imessage-bubbleDark reads as near-
+ * black in light mode, which clashes with the otherwise-light surface. */
+:root.light .bg-imessage-bubbleDark {
+  background-color: #e2e8f0; /* slate-200 */
+  color: #0f172a;
+}
+
+/* Error banners: soften red on white */
+:root.light .bg-red-500\/10 {
+  background-color: rgb(239 68 68 / 0.08);
+}
+:root.light .text-red-300 {
+  color: #b91c1c;
+}
+:root.light .text-red-400\/70 {
+  color: rgb(185 28 28 / 0.7);
+}

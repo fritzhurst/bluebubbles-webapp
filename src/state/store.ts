@@ -42,6 +42,10 @@ interface UIState {
 
   currentPage: 'chats' | 'findmy';
   setPage: (p: 'chats' | 'findmy') => void;
+
+  /** Request MessageView to scroll to (and briefly highlight) a message. */
+  scrollToMessageGuid: string | null;
+  setScrollToMessage: (guid: string | null) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -85,4 +89,7 @@ export const useUIStore = create<UIState>((set) => ({
 
   currentPage: 'chats',
   setPage: (p) => set({ currentPage: p }),
+
+  scrollToMessageGuid: null,
+  setScrollToMessage: (guid) => set({ scrollToMessageGuid: guid }),
 }));

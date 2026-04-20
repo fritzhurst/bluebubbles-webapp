@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getChat, listMessages } from '@/db/queries';
 import { markChatRead } from '@/api/chats';
 import MessageBubble from './MessageBubble';
@@ -8,6 +8,7 @@ import { chatDisplayName, isGroupChat } from '@/utils/guid';
 import { upsertChat } from '@/db/db';
 import { useContactMap } from '@/ui/hooks/useContacts';
 import { useHasPrivateApi } from '@/ui/hooks/useServerInfo';
+import { useUIStore } from '@/state/store';
 
 interface Props {
   chatGuid: string;
@@ -25,6 +26,9 @@ export default function MessageView({ chatGuid }: Props) {
   const messages = useLiveQuery(() => listMessages(chatGuid, 200), [chatGuid], []);
   const contactMap = useContactMap();
   const hasPrivateApi = useHasPrivateApi();
+  const scrollToMessageGuid = useUIStore((s) => s.scrollToMessageGuid);
+  const setScrollToMessage = useUIStore((s) => s.setScrollToMessage);
+  const [highlightedGuid, setHighlightedGuid] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
@@ -102,6 +106,33 @@ export default function MessageView({ chatGuid }: Props) {
     container.scrollTop = container.scrollHeight;
   }, [messages?.length, chatGuid]);
 
+  // Scroll to and briefly highlight a message when the sidebar search
+  // asks us to. Triggered after the selected chat matches the request.
+  useEffect(() => {
+    if (!scrollToMessageGuid || !messages) return;
+    // Only act if the target message is actually in THIS chat.
+    const target = messages.find((m) => m.guid === scrollToMessageGuid);
+    if (!target) return;
+
+    // Stop auto-pinning to the bottom while we jump to history.
+    autoFollowRef.current = false;
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const el = container.querySelector<HTMLElement>(
+      `[data-msg-guid="${cssEscape(scrollToMessageGuid)}"]`,
+    );
+    if (el) {
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      setHighlightedGuid(scrollToMessageGuid);
+      // Clear the highlight after a short pulse.
+      const t = window.setTimeout(() => setHighlightedGuid(null), 2500);
+      // Consume the request so the same guid doesn't fire again on re-render.
+      setScrollToMessage(null);
+      return () => window.clearTimeout(t);
+    }
+  }, [scrollToMessageGuid, messages, setScrollToMessage]);
+
   // Mark the chat as read when opened.
   useEffect(() => {
     if (!chat || !chat.hasUnread) return;
@@ -145,7 +176,17 @@ export default function MessageView({ chatGuid }: Props) {
             </div>
           )}
           {messages?.map((m) => (
-            <MessageBubble key={m.guid} message={m} isGroup={group} />
+            <div
+              key={m.guid}
+              data-msg-guid={m.guid}
+              className={
+                m.guid === highlightedGuid
+                  ? 'transition-colors duration-700 bg-imessage-blue/15 rounded-lg -mx-2 px-2'
+                  : ''
+              }
+            >
+              <MessageBubble message={m} isGroup={group} />
+            </div>
           ))}
         </div>
       </div>
@@ -153,4 +194,16 @@ export default function MessageView({ chatGuid }: Props) {
       <Composer chatGuid={chatGuid} />
     </div>
   );
+}
+
+/**
+ * Minimal CSS.escape shim so we can use a message guid inside an
+ * attribute selector even if it contains characters CSS considers
+ * special (BlueBubbles guids include dashes and sometimes semicolons).
+ */
+function cssEscape(value: string): string {
+  if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
+    return CSS.escape(value);
+  }
+  return value.replace(/[^a-zA-Z0-9_-]/g, (c) => '\\' + c);
 }

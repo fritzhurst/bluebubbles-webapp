@@ -27,7 +27,24 @@ export default function LiveDeviceMap({ deviceId }: Props) {
 
   async function fetchOnce(fresh: boolean) {
     try {
-      const list = fresh ? await refreshFindMyDevices() : await listFindMyDevices();
+      // Manual refresh may ask the server to re-pull from FindMy (expensive,
+      // sometimes returns a different envelope shape). Auto-refresh always
+      // uses the cheap GET — current data is returned either way.
+      let list: FindMyDevice[] | undefined;
+      if (fresh) {
+        try {
+          list = await refreshFindMyDevices();
+        } catch (err) {
+          console.warn('[LiveDeviceMap] /refresh failed, falling back to /devices', err);
+        }
+      }
+      if (!Array.isArray(list)) {
+        list = await listFindMyDevices();
+      }
+      if (!Array.isArray(list)) {
+        setError('Unexpected response from the FindMy endpoint.');
+        return;
+      }
       const match = list.find((d) => d.id === deviceId);
       if (!match) {
         setError('Device not found in the current FindMy list.');
@@ -48,10 +65,11 @@ export default function LiveDeviceMap({ deviceId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceId]);
 
-  // Auto-refresh loop.
+  // Auto-refresh loop. Uses the plain GET, not the refresh POST — that one
+  // is reserved for the manual button.
   useEffect(() => {
     if (!autoRefresh) return;
-    const id = window.setInterval(() => fetchOnce(true), POLL_INTERVAL_MS);
+    const id = window.setInterval(() => fetchOnce(false), POLL_INTERVAL_MS);
     return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRefresh, deviceId]);

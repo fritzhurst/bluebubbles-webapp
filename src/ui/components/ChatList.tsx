@@ -2,10 +2,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo } from 'react';
 import { listChats } from '@/db/queries';
 import ChatRow from './ChatRow';
+import SearchResults from './SearchResults';
 import { useUIStore } from '@/state/store';
-import { useContactMap } from '@/ui/hooks/useContacts';
-import { resolveContactName } from '@/utils/contacts';
-import { chatDisplayName } from '@/utils/guid';
 
 export default function ChatList() {
   const chats = useLiveQuery(() => listChats(500), [], []);
@@ -13,27 +11,19 @@ export default function ChatList() {
   const selectChat = useUIStore((s) => s.selectChat);
   const searchQuery = useUIStore((s) => s.searchQuery);
   const viewMode = useUIStore((s) => s.viewMode);
-  const contactMap = useContactMap();
 
-  // Filter chats first by view mode (active/archived), then by search.
+  // Filter by view mode (active vs archived). Done unconditionally so the
+  // hook call count is stable across renders.
   const visible = useMemo(() => {
     if (!chats) return undefined;
     const archived = viewMode === 'archived';
-    const byMode = chats.filter((c) => !!c.isArchived === archived);
+    return chats.filter((c) => !!c.isArchived === archived);
+  }, [chats, viewMode]);
 
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return byMode;
-    return byMode.filter((chat) => {
-      const name = chatDisplayName(chat, contactMap).toLowerCase();
-      if (name.includes(q)) return true;
-      for (const p of chat.participants ?? []) {
-        if (p.address.toLowerCase().includes(q)) return true;
-        const contactName = resolveContactName(p.address, contactMap).toLowerCase();
-        if (contactName.includes(q)) return true;
-      }
-      return false;
-    });
-  }, [chats, viewMode, searchQuery, contactMap]);
+  // When searching, hand off to SearchResults which also scans messages.
+  if (searchQuery.trim()) {
+    return <SearchResults query={searchQuery} />;
+  }
 
   if (!visible) {
     return <div className="p-4 text-sm text-slate-500">Loading chats…</div>;

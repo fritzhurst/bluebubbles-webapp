@@ -255,6 +255,7 @@ function DeviceRow({ device }: { device: FindMyDevice }) {
   const name = deviceTitle(device);
   const addrShort = formatAddressShort(device.address);
   const battery = formatBattery(device);
+  const lastSeen = formatLastSeen(device.location?.timeStamp);
   const hasLocation = !!(
     device.location?.latitude != null && device.location?.longitude != null
   );
@@ -276,10 +277,36 @@ function DeviceRow({ device }: { device: FindMyDevice }) {
       )}
       <div className="text-xs text-slate-400 truncate">
         {addrShort || 'No location reported'}
+        {lastSeen && ` - Last Seen: ${lastSeen}`}
         {battery && ` - Battery: ${battery}`}
       </div>
     </div>
   );
+}
+
+/**
+ * Format an Apple FindMy timestamp (ms since epoch) as "Monday 04/20/2026 at 11:58AM".
+ * Returns empty string for missing / invalid timestamps.
+ */
+function formatLastSeen(ts: number | null | undefined): string {
+  if (!ts || !Number.isFinite(ts)) return '';
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return '';
+  const weekday = d.toLocaleDateString(undefined, { weekday: 'long' });
+  const date = d.toLocaleDateString(undefined, {
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
+  });
+  // 12-hour clock with AM/PM stuck directly to the minutes (no space).
+  const time = d
+    .toLocaleTimeString(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+    .replace(/\s*(AM|PM)$/i, (_, p) => p.toUpperCase());
+  return `${weekday} ${date} at ${time}`;
 }
 
 /**

@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
 import {
   deviceTitle,
   formatAddressFull,
-  formatAddressShort,
+  formatAddressList,
   listFindMyDevices,
   refreshFindMyDevices,
 } from '@/api/findmy';
@@ -253,35 +253,83 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function DeviceRow({ device }: { device: FindMyDevice }) {
   const name = deviceTitle(device);
-  const addrShort = formatAddressShort(device.address);
+  const address = formatAddressList(device.address);
   const battery = formatBattery(device);
   const lastSeen = formatLastSeen(device.location?.timeStamp);
+  const relative =
+    device.location?.timeStamp != null ? relativeTime(device.location.timeStamp) : '';
   const hasLocation = !!(
     device.location?.latitude != null && device.location?.longitude != null
   );
   const liveHref = hasLocation && device.id ? buildLiveDeviceUrl(device.id) : null;
   return (
-    <div className="px-4 py-3">
+    <div className="px-4 py-3 space-y-0.5">
       {liveHref ? (
         <a
           href={liveHref}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm font-medium text-slate-100 hover:text-imessage-blue hover:underline"
+          className="block text-sm font-medium text-slate-100 hover:text-imessage-blue hover:underline truncate"
           title="Open live tracker in new tab"
         >
           {name}
         </a>
       ) : (
-        <div className="text-sm font-medium text-slate-100">{name}</div>
+        <div className="text-sm font-medium text-slate-100 truncate">{name}</div>
       )}
       <div className="text-xs text-slate-400 truncate">
-        {addrShort || 'No location reported'}
-        {lastSeen && ` - Last Seen: ${lastSeen}`}
-        {battery && ` - Battery: ${battery}`}
+        {address || 'No location reported'}
       </div>
+      {lastSeen && (
+        <div className="text-xs text-slate-400 truncate">
+          Last Seen: {lastSeen}
+          {relative && ` - ${relative}`}
+        </div>
+      )}
+      {battery && (
+        <div className="text-xs text-slate-400 truncate">Battery: {battery}</div>
+      )}
     </div>
   );
+}
+
+/**
+ * Compound relative-time label:
+ *   < 1 hour  →  "39 Minutes ago"
+ *   < 1 day   →  "2 Hours, 15 Minutes ago"  (hours + remaining minutes)
+ *   ≥ 1 day   →  "3 Days, 4 Hours ago"       (days + remaining hours)
+ * A zero sub-unit is dropped so we don't show "1 Hour, 0 Minutes ago".
+ */
+function relativeTime(ts: number): string {
+  const diffMs = Date.now() - ts;
+  if (diffMs < 0) return 'just now';
+
+  const totalMins = Math.floor(diffMs / 60_000);
+  if (totalMins < 1) return 'just now';
+
+  if (totalMins < 60) {
+    return `${totalMins} ${plural(totalMins, 'Minute')} ago`;
+  }
+
+  const totalHours = Math.floor(totalMins / 60);
+  if (totalHours < 24) {
+    const mins = totalMins % 60;
+    const hoursStr = `${totalHours} ${plural(totalHours, 'Hour')}`;
+    return mins === 0
+      ? `${hoursStr} ago`
+      : `${hoursStr}, ${mins} ${plural(mins, 'Minute')} ago`;
+  }
+
+  const totalDays = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+  const daysStr = `${totalDays} ${plural(totalDays, 'Day')}`;
+  return hours === 0
+    ? `${daysStr} ago`
+    : `${daysStr}, ${hours} ${plural(hours, 'Hour')} ago`;
+}
+
+function plural(n: number, singular: string): string {
+  return n === 1 ? singular : `${singular}s`;
 }
 
 /**

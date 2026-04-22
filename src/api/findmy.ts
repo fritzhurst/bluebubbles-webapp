@@ -115,6 +115,29 @@ export function formatAddressFull(addr: FindMyAddress | null | undefined): strin
 }
 
 /**
+ * Address for the list row: street, city, state, ZIP — no country.
+ * BB returns this pre-formatted as `mapItemFullAddress` (sometimes with
+ * a double space before the ZIP), so we collapse whitespace. Falls back
+ * to components if the pre-formatted string is missing.
+ */
+export function formatAddressList(addr: FindMyAddress | null | undefined): string {
+  if (!addr) return '';
+  if (addr.mapItemFullAddress) {
+    return addr.mapItemFullAddress.replace(/\s+/g, ' ').trim();
+  }
+  const region = addr.stateCode || addr.administrativeArea;
+  const parts = [
+    addr.fullThroroughfare ??
+      (addr.streetAddress && addr.streetName
+        ? `${addr.streetAddress} ${addr.streetName}`
+        : addr.streetName),
+    addr.locality,
+    region,
+  ].filter(Boolean) as string[];
+  return parts.join(', ');
+}
+
+/**
  * Best-guess display name. The server sometimes omits `name` entirely —
  * fall back to the device display name, then the model, then the address
  * label (which is what iOS's Find My uses for AirTags named after places).

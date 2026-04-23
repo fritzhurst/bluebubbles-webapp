@@ -46,6 +46,14 @@ interface UIState {
   /** Request MessageView to scroll to (and briefly highlight) a message. */
   scrollToMessageGuid: string | null;
   setScrollToMessage: (guid: string | null) => void;
+
+  /**
+   * Which chats currently show a "typing" indicator. Ephemeral, server-driven
+   * via the `typing-indicator` socket event; auto-cleared by the sync layer
+   * after ~15s of silence or when a new message arrives.
+   */
+  typingByChat: Record<string, true>;
+  setTyping: (chatGuid: string, active: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -92,4 +100,16 @@ export const useUIStore = create<UIState>((set) => ({
 
   scrollToMessageGuid: null,
   setScrollToMessage: (guid) => set({ scrollToMessageGuid: guid }),
+
+  typingByChat: {},
+  setTyping: (chatGuid, active) =>
+    set((prev) => {
+      const existing = !!prev.typingByChat[chatGuid];
+      // Short-circuit no-op updates so unrelated subscribers don't re-render.
+      if (existing === active) return prev;
+      const next = { ...prev.typingByChat };
+      if (active) next[chatGuid] = true;
+      else delete next[chatGuid];
+      return { typingByChat: next };
+    }),
 }));

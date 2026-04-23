@@ -9,8 +9,31 @@ import { SocketEvents } from '@/api/endpoints';
 import { db, upsertChat, upsertMessage } from '@/db/db';
 import type { StoredChat } from '@/db/schema';
 import { getChat } from '@/db/queries';
+import { useUIStore } from '@/state/store';
 import type { Chat, Message } from '@/types/bluebubbles';
 import { toJsEpochMs } from '@/utils/time';
+
+// Safety net — if the server drops a `display: false` event (socket blip,
+// etc.) the indicator would otherwise linger forever. Clear after 15s of
+// silence. A fresh `display: true` resets the timer.
+const TYPING_AUTO_CLEAR_MS = 15_000;
+const typingClearTimers = new Map<string, number>();
+
+function noteTyping(chatGuid: string, active: boolean): void {
+  const existing = typingClearTimers.get(chatGuid);
+  if (existing !== undefined) {
+    window.clearTimeout(existing);
+    typingClearTimers.delete(chatGuid);
+  }
+  useUIStore.getState().setTyping(chatGuid, active);
+  if (active) {
+    const t = window.setTimeout(() => {
+      useUIStore.getState().setTyping(chatGuid, false);
+      typingClearTimers.delete(chatGuid);
+    }, TYPING_AUTO_CLEAR_MS);
+    typingClearTimers.set(chatGuid, t);
+  }
+}
 
 /** Convert a server Message into the shape we store in Dexie. */
 export function toStoredMessage(m: Message, chatGuid: string) {
@@ -120,6 +143,11 @@ export async function applySocketEvent(name: string, payload: unknown): Promise<
             lastMessage: msg,
           });
         }
+
+        // An incoming message implies the typing indicator should go away —
+        // the server usually sends `display: false` alongside, but clearing
+        // it here makes us resilient to missed events.
+        if (!msg.isFromMe) noteTyping(chatGuid, false);
         break;
       }
 
@@ -143,9 +171,18 @@ export async function applySocketEvent(name: string, payload: unknown): Promise<
         break;
       }
 
-      // Typing indicators are ephemeral; we could keep them in Zustand state,
-      // but we skip persisting them for now.
-      case SocketEvents.typingIndicator:
+      // Typing indicators are ephemeral — kept in Zustand (not Dexie) and
+      // auto-cleared by the sync layer after 15s of silence.
+      case SocketEvents.typingIndicator: {
+        const p = (payload as { chatGuid?: string; guid?: string; display?: boolean }) ?? {};
+        // Server payloads have occasionally used `guid` instead of `chatGuid`
+        // — accept either so we're not brittle to version drift.
+        const chatGuid = p.chatGuid ?? p.guid;
+        if (!chatGuid) return;
+        noteTyping(chatGuid, p.display === true);
+        return;
+      }
+
       case SocketEvents.participantAdded:
       case SocketEvents.participantRemoved:
       case SocketEvents.messageSendError:

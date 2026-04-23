@@ -28,6 +28,7 @@ export default function MessageView({ chatGuid }: Props) {
   const hasPrivateApi = useHasPrivateApi();
   const scrollToMessageGuid = useUIStore((s) => s.scrollToMessageGuid);
   const setScrollToMessage = useUIStore((s) => s.setScrollToMessage);
+  const isTyping = useUIStore((s) => !!s.typingByChat[chatGuid]);
   const [highlightedGuid, setHighlightedGuid] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -188,10 +189,37 @@ export default function MessageView({ chatGuid }: Props) {
               <MessageBubble message={m} isGroup={group} />
             </div>
           ))}
+          {isTyping && <TypingIndicator />}
         </div>
       </div>
 
       <Composer chatGuid={chatGuid} />
+    </div>
+  );
+}
+
+/**
+ * Three-bouncing-dots bubble, left-aligned to match an incoming message.
+ * Rendered inside the scrollable area so the ResizeObserver/auto-follow
+ * already handles keeping it in view.
+ */
+function TypingIndicator() {
+  return (
+    <div className="flex items-start pt-1" aria-label="Someone is typing">
+      <div className="rounded-2xl bg-slate-200 dark:bg-slate-700 px-3 py-2 flex items-center gap-1">
+        <span
+          className="inline-block h-1.5 w-1.5 rounded-full bg-slate-500 dark:bg-slate-400 animate-bounce"
+          style={{ animationDelay: '0ms' }}
+        />
+        <span
+          className="inline-block h-1.5 w-1.5 rounded-full bg-slate-500 dark:bg-slate-400 animate-bounce"
+          style={{ animationDelay: '150ms' }}
+        />
+        <span
+          className="inline-block h-1.5 w-1.5 rounded-full bg-slate-500 dark:bg-slate-400 animate-bounce"
+          style={{ animationDelay: '300ms' }}
+        />
+      </div>
     </div>
   );
 }

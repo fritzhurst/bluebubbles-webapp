@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.2 — 2026-04-23
+
+### UI
+
+- Settings dialog now shows a "Web app" section with the current BB Web version. The value is read from `package.json` at build time, so future version bumps automatically update what users see — no manual string edit required.
+
 ## v0.8.1 — 2026-04-23
 
 Security hardening and previously-unreleased feature work from the post-0.8.0 commits.

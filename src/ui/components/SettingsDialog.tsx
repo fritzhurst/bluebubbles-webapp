@@ -7,6 +7,10 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, getSetting, SETTING_KEYS } from '@/db/db';
 import { useUIStore } from '@/state/store';
 import type { ServerInfo } from '@/types/bluebubbles';
+// Single source of truth for the app version — package.json. Bumping the
+// version there automatically updates the value rendered on the Settings
+// dialog.
+import pkg from '../../../package.json';
 
 export default function SettingsDialog() {
   const open = useUIStore((s) => s.settingsOpen);
@@ -61,6 +65,10 @@ export default function SettingsDialog() {
         </div>
 
         <div className="p-5 space-y-4 text-sm">
+          <Section title="Web app">
+            <Row label="BB Web version" value={pkg.version} />
+          </Section>
+
           <Section title="Server">
             <Row label="URL" value={serverUrl ?? '—'} />
             <Row label="BB Server version" value={serverInfo?.server_version ?? '—'} />

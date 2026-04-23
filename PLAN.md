@@ -4,6 +4,8 @@
 **For:** Fritz (fhurst@gmail.com)
 **Working directory:** `bluebubbles-webapp/`
 
+> **📜 Historical document.** This is the pre-build planning doc from the 2026-04-16 overnight session. It reflects what was *intended*, not what exists now. For the current state of the project see [README.md](README.md) (features + how to run), [NOTES.md](NOTES.md) (deployment + known issues), and [CHANGELOG.md](CHANGELOG.md) (what shipped per version). Many items listed as "non-goals" here (attachment sending, search, FindMy, theme toggle) have since shipped.
+
 ---
 
 ## Read this first: an architectural pivot I had to make

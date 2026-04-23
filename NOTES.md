@@ -7,7 +7,7 @@ Session summary, deployment workflow, and known issues.
 ## What we built
 
 A local-first web client for BlueBubbles Server, deployed at
-`https://bluebubbles-web.fritzhurst.com` (v0.8.0).
+`https://bluebubbles-web.fritzhurst.com` (v0.8.1).
 
 ### Features shipped
 
@@ -132,7 +132,7 @@ Very intermittent. The ResizeObserver + user-gesture-only tracking in `MessageVi
 
 ### 3. `/api/v1/icloud/findmy/devices/refresh` endpoint quirk
 
-The POST /refresh endpoint returns a different envelope than GET /devices, which was causing `.find()` errors on auto-refresh. Already fixed in code (waiting in local repo to be pushed) — auto-refresh now uses GET only; manual refresh button tries POST first and falls back to GET gracefully.
+The POST /refresh endpoint returns a different envelope than GET /devices, which was causing `.find()` errors on auto-refresh. Already fixed in code — auto-refresh now uses GET only; manual refresh button tries POST first and falls back to GET gracefully.
 
 ### 4. AirTag battery enum mapping is a best guess
 
@@ -154,13 +154,14 @@ Currently the client talks directly to `bluebubbles.fritzhurst.com` for its API 
 
 From the original wishlist + items discovered during build:
 
-- **Settings page** — full version with cache eviction, manual sync, theme, server URL swap, etc.
+- **Settings page** — full version with cache eviction, manual sync, server URL swap, etc. (light/dark toggle shipped in 0.8.1)
 - **Reactions / tapbacks** — requires Private API on the BB Server
-- **Message edit / unsend** — ditto
+- **Message edit / unsend / stickers** — Private API features
 - **Typing indicator UI** — socket event is already wired, just no render
-- **Message content search** — currently only the chat list is searchable
+- **Read-receipt + typing-indicator send** — we listen but don't emit
+- **Group chat management** — rename, add/remove participants, leave
 - **Interactive Leaflet map** for FindMy (currently static OSM embeds per device)
-- **FCM push notifications** — requires real Firebase, out of scope initially
+- **FCM / Web Push notifications** — requires Firebase or Web Push setup, out of scope initially
 - **`npm run build`** fix (see Known Issues)
 - **Attachment upload progress** — currently fires-and-forgets; large files feel laggy
 
@@ -191,8 +192,7 @@ From the original wishlist + items discovered during build:
 
 When you pick this up in a new session, a quick primer on where we left off:
 
-- Version: **v0.8.0**
+- Version: **v0.8.1**
 - Deployed: `https://bluebubbles-web.fritzhurst.com`
-- Source: `github.com/fritzhurst/bluebubbles-webapp` (main branch, v0.8.0 tag)
-- Most recent unpushed change: LiveDeviceMap refresh fallback (see Known Issues #3)
-- Next planned session: **Settings page build-out**
+- Source: `github.com/fritzhurst/bluebubbles-webapp` (main branch, v0.8.1 tag)
+- Next planned session: upstream feature parity (reactions, typing-indicator UI, group mgmt, notifications) — see CHANGELOG planned-for-0.9 notes

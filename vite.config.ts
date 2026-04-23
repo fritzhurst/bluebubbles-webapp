@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   resolve: {
     alias: {
@@ -20,11 +20,18 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    host: true, // listen on 0.0.0.0 so you can reach it from other devices on your LAN
+    // Default to loopback only. Set VITE_HOST_ALL=true to expose the dev
+    // server on the LAN (e.g. for testing from another device on the network).
+    // Combined with prior Vite/esbuild CVEs that let any origin read the dev
+    // server, binding to 0.0.0.0 by default is an unnecessary risk.
+    host: process.env.VITE_HOST_ALL === 'true' ? true : 'localhost',
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // Only emit sourcemaps in dev-mode builds. Production bundles shipped to
+    // a public host should not include .map files — they expose original
+    // TypeScript, auth flows, and API internals.
+    sourcemap: mode !== 'production',
     target: 'es2020',
   },
-});
+}));

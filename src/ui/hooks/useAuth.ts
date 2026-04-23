@@ -18,11 +18,18 @@ export interface LoginResult {
   info?: ServerInfo;
 }
 
-/** Normalize the user-entered URL — trim, strip trailing slash, force https. */
+/** Normalize the user-entered URL — trim, strip trailing slash, force https
+ *  (except for loopback, where http is allowed for local development). */
 export function normalizeServerUrl(raw: string): string {
   let url = raw.trim();
   if (!url) return '';
   if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  // Enforce HTTPS for anything that isn't localhost/loopback. Plaintext HTTP
+  // would leak the server password and every message to network eavesdroppers.
+  const isLoopback = /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/i.test(url);
+  if (/^http:\/\//i.test(url) && !isLoopback) {
+    url = url.replace(/^http:\/\//i, 'https://');
+  }
   // Drop any trailing slash to make URL construction predictable.
   return url.replace(/\/+$/, '');
 }

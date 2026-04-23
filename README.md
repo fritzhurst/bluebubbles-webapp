@@ -8,25 +8,33 @@ A local-first, IndexedDB-backed web client for a BlueBubbles Server. Connects di
 
 - URL + password authentication (no OAuth)
 - Chat list with unread indicators, real-time updates over Socket.IO
-- Message view with iMessage-style bubbles
-- Send text messages (optimistic UI)
-- Receive/display attachments (images, video, audio, files)
-- Attachment blob cache in IndexedDB — no re-downloads
+- Message view with iMessage-style bubbles, sender labels in group chats
+- Send text messages (optimistic UI); send method auto-selected based on server private-API capability
+- Send attachments: file picker, clipboard paste, drag-and-drop, multi-file with caption
+- Receive/display attachments (images, video, audio, files) with IndexedDB blob cache
+- New-message composer with contact autocomplete
+- Contact name + avatar resolution via macOS Contacts (`/contact` endpoint)
+- Search: filter chat list (sidebar) and search message content (dedicated view)
+- Sidebar menu: Mark-All-Read, Archived view, FindMy, Settings, Logout
+- FindMy page: device + item list, map view, live-polling tracker in a new tab (with last-seen)
+- Light/dark theme toggle
 - Persistent local store — reloads and restarts reuse cached data
 - Incremental sync on every reconnect
 
 ## Not yet implemented (TODO)
 
-- Sending attachments from the composer (download side works)
-- Reactions / tapbacks
+- Reactions / tapbacks (requires Private API)
 - Typing indicator UI (socket event is already wired, just not rendered)
-- Search
-- Private-API features (edits, unsend, stickers)
-- FCM push notifications
+- Message edit / unsend / stickers (Private API features)
+- Group chat management (rename, add/remove participants)
+- FCM / Web Push notifications
+- Read-receipt + typing-indicator send (we listen but don't emit)
 
 ---
 
 ## Running locally
+
+Requires Node 20+ LTS.
 
 ```bash
 cd bluebubbles-webapp
@@ -35,6 +43,14 @@ npm run dev
 ```
 
 Open http://localhost:5173 and enter your BlueBubbles server URL and password.
+
+The dev server binds to `localhost` only by default. To reach it from another device on your LAN (e.g. a phone for PWA testing), start it with:
+
+```bash
+VITE_HOST_ALL=true npm run dev
+```
+
+Only opt-in on trusted networks.
 
 ### CORS
 
@@ -159,7 +175,7 @@ bluebubbles-webapp/
 ├── vite.config.ts
 ├── index.html
 ├── tailwind.config.js
-├── postcss.config.js
+├── postcss.config.cjs
 ├── public/
 │   └── manifest.webmanifest
 └── src/
@@ -167,17 +183,24 @@ bluebubbles-webapp/
     ├── App.tsx
     ├── index.css
     ├── api/                  REST + Socket.IO clients (endpoints.ts is the control panel)
+    │                         chats, messages, attachments, contacts, findmy, handles, server, socket, rest
     ├── db/                   Dexie schema, upserts, queries
     ├── sync/                 initial + incremental + socket-driven sync
     ├── state/                Zustand store for ephemeral UI state
     ├── types/                server model types
-    ├── utils/                time conversion, guid generation
+    ├── utils/                time conversion, guid, base64, contacts, route (hash routing)
     └── ui/
-        ├── pages/Login.tsx   URL + password login
-        ├── pages/Main.tsx    chat list + message view shell
-        ├── components/       ChatList, ChatRow, MessageView, MessageBubble,
-        │                     AttachmentView, Composer, ConnectionStatus, EmptyState
-        └── hooks/            useAuth
+        ├── pages/
+        │   ├── Login.tsx          URL + password login
+        │   ├── Main.tsx           chat list + message view shell
+        │   ├── FindMy.tsx         device + item tracker (list / map)
+        │   └── LiveDeviceMap.tsx  single-device live tracker (new-tab target)
+        ├── components/       ChatList, ChatRow, ChatAvatar, ContactAvatar,
+        │                     MessageView, MessageBubble, AttachmentView,
+        │                     Composer, NewMessageDialog, SearchBar, SearchResults,
+        │                     SettingsDialog, SidebarMenu,
+        │                     ConnectionStatus, EmptyState
+        └── hooks/            useAuth, useContacts, useSendMethod, useServerInfo, useTheme
 ```
 
 ---

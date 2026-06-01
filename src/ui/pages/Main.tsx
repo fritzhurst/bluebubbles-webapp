@@ -210,8 +210,11 @@ export default function Main() {
           )}
         </aside>
 
-        {/* Right pane: selected chat */}
-        <main className="flex flex-1 flex-col">
+        {/* Right pane: selected chat. `min-w-0` lets this flex child shrink
+         *  below its content's intrinsic width — without it a long, unbroken
+         *  message (e.g. a bare URL) forces the pane wider than the viewport
+         *  and the whole chat scrolls off the right edge. */}
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
           {selectedChatGuid ? (
             <MessageView chatGuid={selectedChatGuid} />
           ) : (

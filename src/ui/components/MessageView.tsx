@@ -23,7 +23,7 @@ const NEAR_BOTTOM_PX = 120;
 
 export default function MessageView({ chatGuid }: Props) {
   const chat = useLiveQuery(() => getChat(chatGuid), [chatGuid]);
-  const messages = useLiveQuery(() => listMessages(chatGuid, 200), [chatGuid], []);
+  const messages = useLiveQuery(() => listMessages(chatGuid, 200), [chatGuid]);
   const contactMap = useContactMap();
   const hasPrivateApi = useHasPrivateApi();
   const scrollToMessageGuid = useUIStore((s) => s.scrollToMessageGuid);

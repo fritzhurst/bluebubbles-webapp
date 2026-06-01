@@ -58,6 +58,7 @@ export function toStoredChat(c: Chat): StoredChat {
     sortTimestamp: lastTs,
     lastSyncedAt: Date.now(),
     hasUnread: !!(c.lastMessage && !c.lastMessage.isFromMe && !c.lastMessage.dateRead),
+    pinned: false,
   };
 }
 
@@ -79,6 +80,7 @@ export async function mergeServerChat(c: Chat): Promise<StoredChat> {
 
   return {
     ...fresh,
+    pinned: existing.pinned ?? false,
     // If nothing new arrived, keep the local read flag. If a brand-new
     // message arrived, honor the fresh calculation (which will flag unread
     // iff the newest is an incoming, as before).
@@ -102,6 +104,7 @@ export async function mergeServerChats(chats: Chat[]): Promise<StoredChat[]> {
       existing.lastMessage.guid === c.lastMessage?.guid;
     return {
       ...fresh,
+      pinned: existing?.pinned ?? false,
       hasUnread: lastMessageUnchanged ? existing.hasUnread : fresh.hasUnread,
     };
   });
@@ -140,6 +143,7 @@ export async function applySocketEvent(name: string, payload: unknown): Promise<
             sortTimestamp: toJsEpochMs(msg.dateCreated),
             lastSyncedAt: Date.now(),
             hasUnread: !msg.isFromMe,
+            pinned: false,
             lastMessage: msg,
           });
         }

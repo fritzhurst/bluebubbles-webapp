@@ -54,6 +54,10 @@ interface UIState {
    */
   typingByChat: Record<string, true>;
   setTyping: (chatGuid: string, active: boolean) => void;
+
+  /** Time range (in milliseconds from now) to filter chat list. null = show all. */
+  historyTimeRangeMs: number | null;
+  setHistoryTimeRange: (rangeMs: number | null) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -112,4 +116,5 @@ export const useUIStore = create<UIState>((set) => ({
       else delete next[chatGuid];
       return { typingByChat: next };
     }),
-}));
+  historyTimeRangeMs: null,
+  setHistoryTimeRange: (rangeMs) => set({ historyTimeRangeMs: rangeMs }),}));

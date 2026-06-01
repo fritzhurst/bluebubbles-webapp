@@ -5,12 +5,24 @@ import { db } from './db';
 import type { StoredChat, StoredMessage } from './schema';
 
 /** Chat list, newest activity first. */
-export async function listChats(limit = 200): Promise<StoredChat[]> {
-  return db.chats
+/** Chat list, newest activity first. Optionally filtered by time range. */
+export async function listChats(limit = 200, minActivityTimeMs?: number): Promise<StoredChat[]> {
+  let rows = await db.chats
     .orderBy('sortTimestamp')
     .reverse()
     .limit(limit)
     .toArray();
+
+  if (minActivityTimeMs !== undefined) {
+    rows = rows.filter((c) => (c.sortTimestamp ?? 0) >= minActivityTimeMs);
+  }
+
+  return rows.sort((a, b) => {
+    const pinnedA = a.pinned ? 1 : 0;
+    const pinnedB = b.pinned ? 1 : 0;
+    if (pinnedA !== pinnedB) return pinnedB - pinnedA;
+    return (b.sortTimestamp ?? 0) - (a.sortTimestamp ?? 0);
+  });
 }
 
 /** Messages for a single chat, oldest-first (natural display order). */

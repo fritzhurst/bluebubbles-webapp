@@ -9,11 +9,7 @@ import { db, setSetting, SETTING_KEYS } from '@/db/db';
 import { DEFAULT_THEME, type Theme } from '@/db/schema';
 
 export function useTheme(): [Theme, (t: Theme) => Promise<void>, () => Promise<void>] {
-  const row = useLiveQuery(
-    () => db.settings.get(SETTING_KEYS.THEME),
-    [],
-    undefined,
-  );
+  const row = useLiveQuery(() => db.settings.get(SETTING_KEYS.THEME), []);
   const current = (row?.value as Theme | undefined) ?? DEFAULT_THEME;
 
   // Apply the class to <html> synchronously whenever it changes. Using a

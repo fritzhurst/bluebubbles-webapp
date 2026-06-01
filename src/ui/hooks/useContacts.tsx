@@ -26,7 +26,7 @@ interface ProviderProps {
 }
 
 export function ContactMapProvider({ children }: ProviderProps) {
-  const contacts = useLiveQuery(() => db.contacts.toArray(), [], [] as StoredContact[]);
+  const contacts = useLiveQuery<StoredContact[]>(() => db.contacts.toArray(), []) ?? [];
   // Set of contactIds that have a stored avatar. Used to disambiguate when
   // the same phone/email appears on multiple contact entries (BB Server
   // returns both db-source and api-source versions of the same person).
@@ -36,8 +36,7 @@ export function ContactMapProvider({ children }: ProviderProps) {
       return new Set(rows.map((r) => String(r.contactId)));
     },
     [],
-    new Set<string>(),
-  );
+  ) ?? new Set<string>();
 
   const map = useMemo(() => {
     const m = new Map<string, StoredContact>();

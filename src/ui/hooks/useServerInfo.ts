@@ -10,11 +10,7 @@ import { db, SETTING_KEYS } from '@/db/db';
 import type { ServerInfo } from '@/types/bluebubbles';
 
 export function useServerInfo(): ServerInfo | undefined {
-  const row = useLiveQuery(
-    () => db.settings.get(SETTING_KEYS.SERVER_INFO),
-    [],
-    undefined,
-  );
+  const row = useLiveQuery(() => db.settings.get(SETTING_KEYS.SERVER_INFO), []);
   return row?.value as ServerInfo | undefined;
 }
 

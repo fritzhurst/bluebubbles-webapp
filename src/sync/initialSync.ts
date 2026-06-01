@@ -11,6 +11,11 @@
 // We deliberately do NOT deep-paginate old messages. BB chats can have tens
 // of thousands of messages. The app pulls older history on demand when the
 // user scrolls up (see `loadMoreMessages`).
+//
+// When the user has chosen a sync window (Pull-history pulldown), step 2 is
+// bounded to that time range instead of "most recent N of all time", and
+// capped per chat so one hyperactive group can't stall the whole load. The
+// full window is still available on demand via the pulldown's Refresh.
 
 import { queryChats, getChatMessages } from '@/api/chats';
 import { queryHandles } from '@/api/handles';
@@ -28,10 +33,15 @@ import {
 import type { StoredContact, StoredContactAvatar } from '@/db/schema';
 import type { Contact } from '@/types/bluebubbles';
 import { mergeServerChats, toStoredMessage } from './socketHandlers';
+import { resolveSyncWindow, getSyncWindow } from './syncWindow';
 import { base64ToBlob, detectMimeFromBase64 } from '@/utils/base64';
 
 const CHAT_PAGE = 100;
 const MESSAGES_PER_CHAT = 50;
+// When a sync window is active, pull up to this many of the most-recent
+// messages per chat *within the window*. Bounds the initial load; the full
+// window is fetched on demand via the pulldown's Refresh.
+const WINDOWED_MESSAGES_PER_CHAT = 500;
 
 export interface InitialSyncProgress {
   chatsPulled: number;
@@ -71,13 +81,23 @@ export async function runInitialSync(onProgress?: ProgressCallback): Promise<voi
     if (page.length < CHAT_PAGE) break;
   }
 
-  // 2. Messages per chat
+  // 2. Messages per chat. Bounded to the user's sync window when one is set,
+  // otherwise the legacy "most-recent N of all time" preview.
   progress.phase = 'messages';
   report();
 
+  const window = resolveSyncWindow(await getSyncWindow());
+
   for (const chat of allChats) {
     try {
-      const msgs = await getChatMessages(chat.guid, { limit: MESSAGES_PER_CHAT, offset: 0 });
+      const msgs = window
+        ? await getChatMessages(chat.guid, {
+            limit: WINDOWED_MESSAGES_PER_CHAT,
+            offset: 0,
+            after: window.afterMs,
+            before: window.beforeMs,
+          })
+        : await getChatMessages(chat.guid, { limit: MESSAGES_PER_CHAT, offset: 0 });
       if (msgs.length > 0) {
         await upsertMessages(msgs.map((m) => toStoredMessage(m, chat.guid)));
         progress.messagesPulled += msgs.length;

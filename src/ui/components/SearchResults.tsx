@@ -41,12 +41,8 @@ export default function SearchResults({ query }: { query: string }) {
   const setScrollToMessage = useUIStore((s) => s.setScrollToMessage);
   const contactMap = useContactMap();
 
-  const chats = useLiveQuery<StoredChat[]>(() => db.chats.toArray(), [], []);
-  const messages = useLiveQuery<StoredMessage[]>(
-    () => db.messages.toArray(),
-    [],
-    [],
-  );
+  const chats = useLiveQuery<StoredChat[]>(() => db.chats.toArray(), []) ?? [];
+  const messages = useLiveQuery<StoredMessage[]>(() => db.messages.toArray(), []) ?? [];
 
   // Index of chats by guid for O(1) lookups while scanning messages.
   const chatByGuid = useMemo(() => {

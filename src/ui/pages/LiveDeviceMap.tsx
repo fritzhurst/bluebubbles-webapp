@@ -3,7 +3,7 @@
 // OpenStreetMap iframe whenever the coordinates change so you can watch
 // a moving AirTag update over time.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   deviceTitle,
   formatAddressFull,

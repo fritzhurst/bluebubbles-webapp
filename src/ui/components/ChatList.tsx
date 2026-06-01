@@ -6,7 +6,12 @@ import SearchResults from './SearchResults';
 import { useUIStore } from '@/state/store';
 
 export default function ChatList() {
-  const chats = useLiveQuery(() => listChats(500), [], []);
+  const historyTimeRangeMs = useUIStore((s) => s.historyTimeRangeMs);
+  const chats = useLiveQuery(
+    () => listChats(500, historyTimeRangeMs ?? undefined),
+    [historyTimeRangeMs],
+    [],
+  ) ?? [];
   const selectedChatGuid = useUIStore((s) => s.selectedChatGuid);
   const selectChat = useUIStore((s) => s.selectChat);
   const searchQuery = useUIStore((s) => s.searchQuery);

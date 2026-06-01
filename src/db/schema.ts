@@ -24,6 +24,8 @@ export interface StoredChat extends Chat {
   lastSyncedAt: number;
   /** True if the user has unread messages in this chat */
   hasUnread: boolean;
+  /** User-pinned chats appear above the normal chat list */
+  pinned: boolean;
 }
 
 export interface StoredMessage extends Message {
@@ -109,6 +111,7 @@ export const SETTING_KEYS = {
   LAST_INCREMENTAL_SYNC: 'sync.lastIncrementalSync',
   SEND_METHOD: 'pref.sendMethod',
   THEME: 'pref.theme',
+  SYNC_WINDOW: 'pref.syncWindow',
 } as const;
 
 export type SendMethod = 'apple-script' | 'private-api';
@@ -116,6 +119,21 @@ export const DEFAULT_SEND_METHOD: SendMethod = 'private-api';
 
 export type Theme = 'light' | 'dark';
 export const DEFAULT_THEME: Theme = 'dark';
+
+/**
+ * How far back history should be pulled into the browser. Persisted so the
+ * choice survives reloads and governs the per-chat message pull during the
+ * initial sync (not just the on-demand range pull). `'none'` keeps the legacy
+ * behavior of pulling the most-recent messages per chat with no time bound.
+ */
+export type SyncWindowRange = 'none' | '1m' | '2m' | '6m' | 'custom';
+export interface SyncWindowPref {
+  range: SyncWindowRange;
+  /** ISO `yyyy-mm-dd`; only meaningful when range === 'custom'. */
+  fromDate?: string;
+  toDate?: string;
+}
+export const DEFAULT_SYNC_WINDOW: SyncWindowPref = { range: 'none' };
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
 

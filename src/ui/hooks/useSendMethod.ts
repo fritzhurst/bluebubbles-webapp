@@ -21,7 +21,7 @@ import type { SendMethod } from '@/db/schema';
 import { useHasPrivateApi } from '@/ui/hooks/useServerInfo';
 
 export function useSendMethod(): [SendMethod, (m: SendMethod) => Promise<void>] {
-  const row = useLiveQuery(() => db.settings.get(SETTING_KEYS.SEND_METHOD), [], undefined);
+  const row = useLiveQuery(() => db.settings.get(SETTING_KEYS.SEND_METHOD), []);
   const hasPrivateApi = useHasPrivateApi();
 
   const stored = row?.value as SendMethod | undefined;

@@ -61,11 +61,7 @@ export default function NewMessageDialog() {
   }, [open]);
 
   // Live-query contacts so the suggestions reflect any fresh sync.
-  const contacts = useLiveQuery<StoredContact[]>(
-    () => db.contacts.toArray(),
-    [],
-    [] as StoredContact[],
-  );
+  const contacts = useLiveQuery<StoredContact[]>(() => db.contacts.toArray(), []) ?? [];
 
   const suggestions: Suggestion[] = useMemo(() => {
     const query = recipientInput.trim().toLowerCase();
